@@ -1,0 +1,20 @@
+[project]
+name = "evo1env"
+version = "0.0.0"
+description = "Evo 1 embedding environment for the regions-probe paper (mRNABench's evo-model / stripedhyena path)"
+requires-python = ">=3.12,<3.13"
+dependencies = ["torch==2.13.0", "evo-model==0.5", "stripedhyena==0.2.2", "pandas", "pyarrow", "numpy",
+                "ninja", "packaging", "psutil", "setuptools", "wheel", "einops", "flash-attn==2.8.3.post1",
+                "safetensors", "huggingface-hub", "pyyaml"]
+
+[tool.uv]
+package = false
+no-build-isolation-package = ["flash-attn"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true

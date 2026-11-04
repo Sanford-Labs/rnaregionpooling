@@ -1,0 +1,26 @@
+[project]
+name = "mbenv"
+version = "0.0.0"
+description = "Frozen-model embedding harness for the regions-probe paper (multimolecule models)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "torch==2.13.0",
+  "multimolecule==0.2.2",
+  "transformers",
+  "pandas",
+  "pyarrow",
+  "scipy",
+  "safetensors",
+  "huggingface_hub",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
