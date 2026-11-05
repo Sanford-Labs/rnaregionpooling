@@ -126,7 +126,7 @@ def teaser():
     F = TEXT_PT * VW / PRINT_PT["teaser"]
     em = 0.5 * F
     parts, x0, y = [], 2, 1.05 * F
-    parts.append(f'<text class="rowtitle" x="{x0}" y="{y:.1f}">(a) The readout</text>')
+    parts.append(f'<text class="rowtitle" x="{x0}" y="{y:.1f}">(a) Global mean and region-aware readouts</text>')
 
     # the transcript, its three regions at their share of the nucleotides
     W, at = VW - 2 * x0, x0
@@ -149,19 +149,19 @@ def teaser():
     D, pitch = 9, W / 27
     for label, cols in (("global mean: d values", [MB] * D),
                         ("region-aware: 3d values", [C5] * D + [CC] * D + [C3] * D)):
-        y += 1.55 * F
+        y += 1.45 * F
         parts.append(f'<text x="{x0}" y="{y:.1f}">{label}</text>')
         for c, col in enumerate(cols):                               # drawn as the transcript above them
             parts.append(f'<rect x="{x0 + c * pitch:.1f}" y="{y + 0.4 * F:.1f}" width="{pitch - 1.5:.1f}" '
                          f'height="{0.95 * F:.1f}" rx="1.5" fill="{col}" fill-opacity=".22" stroke="{col}" '
                          f'stroke-width="1.2"/>')
-        y += 1.35 * F
-    y += 1.4 * F
+        y += 1.3 * F
+    y += 1.25 * F
     parts.append(f'<text x="{x0}" y="{y:.1f}">same model, forward pass and probe</text>')
 
     # the gain on the five transcript columns
-    y += 2.1 * F
-    parts.append(f'<text class="rowtitle" x="{x0}" y="{y:.1f}">(b) Test r over the global mean</text>')
+    y += 1.75 * F
+    parts.append(f'<text class="rowtitle" x="{x0}" y="{y:.1f}">(b) Gain in test Pearson r</text>')
     L = max(len(SHOWN.get(c, c)) for c in REG5) * em + 0.6 * F
     NUM, CNT = 6.6 * em, 5.4 * em
     BW = VW - x0 - L - NUM - CNT - 1.2 * F
@@ -169,11 +169,15 @@ def teaser():
     pad = (allv.max() - allv.min()) * 0.3
     lo, hi = min(0.0, allv.min() - pad), allv.max() + pad
     X = lambda u: x0 + L + (u - lo) / (hi - lo) * BW  # noqa: E731
+    ticks = [v for v in sh._nice(lo, hi, 4)[2] if lo <= v <= hi]
     y += 0.5 * F
-    top = y
+    top, row = y, 1.4 * F
+    for v in ticks:                                                  # the grid sits under the violins
+        if v != 0:
+            parts.append(f'<line class="grid" x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{top:.1f}" '
+                         f'y2="{top + len(REG5) * row:.1f}"/>')
     for c in REG5:
         mean, win, n, per = gain[c]
-        row = 1.58 * F
         cy = y + row / 2
         parts.append(f'<text x="{x0 + L - 0.4 * F:.1f}" y="{cy + 0.35 * F:.1f}" text-anchor="end">'
                      f'{SHOWN.get(c, c)}</text>')
@@ -182,13 +186,16 @@ def teaser():
         parts.append(f'<text x="{VW - x0:.1f}" y="{cy + 0.35 * F:.1f}" text-anchor="end">{win}/{n}</text>')
         y += row
     parts.append(f'<line class="zero" x1="{X(0):.1f}" x2="{X(0):.1f}" y1="{top:.1f}" y2="{y:.1f}"/>')
-    y += 1.25 * F
-    parts.append(f'<text class="tick" x="{x0 + L + BW / 2:.1f}" y="{y:.1f}" text-anchor="middle">'
-                 f'test r, region-aware − global mean</text>')
-    y += 1.25 * F
-    parts.append(f'<text class="tick" x="{x0:.1f}" y="{y:.1f}">one model each; box: quartiles; '
-                 f'dot: median</text>')
-    h = y + 0.6 * F
+    y += 1.0 * F
+    for v in ticks:
+        parts.append(f'<text class="tick" x="{X(v):.1f}" y="{y:.1f}" text-anchor="middle">{v:g}</text>')
+    for line in ("Difference of test Pearson r,", "region-aware − global mean"):
+        y += 1.1 * F
+        parts.append(f'<text class="tick" x="{x0 + L + BW / 2:.1f}" y="{y:.1f}" text-anchor="middle">{line}</text>')
+    y += 1.15 * F
+    parts.append(f'<text class="tick" x="{x0:.1f}" y="{y:.1f}">one value per model; box, quartiles; '
+                 f'dot, median</text>')
+    h = y + 0.35 * F
     return (f'<svg class="fig" viewBox="0 0 {VW} {h:.0f}" role="img" '
             f'aria-label="the readout and the gain">{"".join(parts)}</svg>')
 
@@ -197,7 +204,7 @@ def ranks():
     """How far each model moves in a column's ranking when the readout changes."""
     from scipy.stats import kendalltau
     grab = lambda d, fs, pr: {c: ft.seeds(d, c, fs, pr) for c in ft.COLS}  # noqa: E731
-    cols = [c for c in ft.COLS]
+    cols = [c for c in ft.COLS if c not in ("Prot-Loc", "GO")] + ["Prot-Loc", "GO"]   # the tables' order
     shift, tau = {}, {}
     for c in cols:
         a, b, names = [], [], []
@@ -242,8 +249,8 @@ def ranks():
     parts.append(f'<text class="tick" x="{L - 6}" y="{y + 12}" text-anchor="end">Kendall $\tau$</text>'.replace("$\tau$", "τ"))
     for ci, c in enumerate(cols):
         parts.append(f'<text class="tick" x="{L + ci * CW + CW / 2}" y="{y + 12}" text-anchor="middle">{tau[c]:.2f}</text>')
-    parts.append(f'<text class="tick" x="{L}" y="{y + 30}">blue: the region readout places the model higher; '
-                 f'red: lower</text>')
+    parts.append(f'<text class="tick" x="{L}" y="{y + 30}">blue: higher rank under the region-aware readout; '
+                 f'red: lower rank</text>')
     return (f'<svg class="fig" viewBox="0 0 {W + 76} {y + 44}" role="img" '
             f'aria-label="rank change per column">{"".join(parts)}</svg>')
 

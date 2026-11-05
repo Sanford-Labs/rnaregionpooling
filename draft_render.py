@@ -168,7 +168,7 @@ def schematic():
     D, cell = 8, 0.78 * F                                            # d values, one cell each
     vec = D * cell
     parts = []
-    for side, (x0, title) in enumerate(((2 * F, "Global pooling"), (half + 2 * F, "Region-aware pooling"))):
+    for side, (x0, title) in enumerate(((2 * F, "Global mean"), (half + 2 * F, "Region-aware"))):
         parts.append(f'<text class="rowtitle" x="{x0}" y="{1.1 * F:.1f}">{title}</text>')
         x, bounds = x0, []
         for frac, col, lab in segs:
